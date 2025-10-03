@@ -7,6 +7,7 @@ app = Flask(__name__)
 # Configure SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = "attendance_secret_key"  
 db = SQLAlchemy(app)
 
 
