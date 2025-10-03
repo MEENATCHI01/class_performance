@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>👨‍🎓 Manage Students& Subjects</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        h1 { color: darkblue; }
+        ul { margin-top: 15px; }
+        li { margin: 8px 0; }
+        input, button { padding: 6px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        button { cursor: pointer; }
+        .delete { background: red; color: white; }
+        .add { background: green; color: white; }
+        a { text-decoration: none; color: darkblue; margin-top: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div style="display: flex; justify-content: center; align-items: flex-start; gap: 60px; margin-top: 40px;">
+        <div style="width: 400px;">
+            <h1>👨‍🎓 Manage Students</h1>
+            <form method="POST">
+                <input type="text" name="add_student" placeholder="Enter new student" required>
+                <button type="submit" class="add">➕ Add Student</button>
+            </form>
+            {% if student_message %}
+            <div style="color: green; font-weight: bold; text-align: center; margin-bottom: 20px;">{{ student_message }}</div>
+            {% endif %}
+            
+            <h3>Student List:</h3>
+            <ul>
+                {% for s in students %}
+                <li>
+                    {{ s.name }}
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="delete_student" value="{{ s.name }}">
+                        <button type="submit" class="delete">❌ Delete</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{{ url_for('home') }}">🏠 Back to Attendance</a>
+        </div>
+        <div style="width: 400px;">
+            <h1>📚 Manage Subjects</h1>
+            <form method="POST">
+                <input type="text" name="course_name" placeholder="Enter new subject" required>
+                <button type="submit">➕ Add Subject</button>
+            </form>
+            {% if subject_message %}
+            <div style="color: green; font-weight: bold; text-align: center; margin-bottom: 20px;">{{ subject_message }}</div>
+            {% endif %}
+            <h3>Available Subjects:</h3>
+            {% if courses %}
+                <select name="course">
+                    {% for c in courses %}
+                        <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            {% else %}
+                <p>No subjects added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

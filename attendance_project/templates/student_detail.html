@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📊 {{ name }}'s Attendance</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        h1 { color: darkblue; }
+        table { border-collapse: collapse; width: 70%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background: #f2f2f2; }
+        .present { color: green; font-weight: bold; }
+        .absent { color: red; font-weight: bold; }
+        a { text-decoration: none; color: darkblue; margin-top: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h1>📊 Attendance for {{ name }}</h1>
+    <p>Total Days: {{ total_days }}</p>
+    <p>✔ Present: {{ present_count }} | ❌ Absent: {{ absent_count }}</p>
+    <p>📈 Percentage: {{ percentage }}%</p>
+
+    <h3>Attendance Records:</h3>
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+        {% for date, status in records %}
+        <tr>
+            <td>{{ date }}</td>
+            <td>
+                {% if status == "P" %}
+                    <span class="present">Present ✅</span>
+                {% elif status == "A" %}
+                    <span class="absent">Absent ❌</span>
+                {% else %}
+                    {{ status }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="{{ url_for('home') }}">🏠 Back to Attendance</a>
+</body>
+</html>

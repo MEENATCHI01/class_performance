@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Homework & Exercism Tracker</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #eef6ff, #f9f9f9);
+            color: #333;
+        }
+        h1 { color: #1e3d59; text-align: center; margin-bottom: 30px; }
+
+        /* Combined box */
+        .combined-box {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 30px;
+        }
+
+        .homework-section {
+            flex: 2;
+            border-right: 3px solid #ddd;
+            padding-right: 15px;
+        }
+
+        .exercism-section {
+            flex: 1;
+            padding-left: 15px;
+            border-left: 1px solid #eee;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 8px; overflow: hidden; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #34495e; color: white; }
+        tr:nth-child(even) { background-color: #f0f9ff; }
+        tr:nth-child(odd) { background-color: #fdf6ff; }
+
+        .marks-input, .tasks-input {
+            width: 90%;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .tasks-input { display: none; margin-top: 10px; }
+
+        button {
+            margin-top: 20px; 
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #1abc9c, #3498db);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover { background: linear-gradient(135deg, #16a085, #2980b9); transform: scale(1.05); }
+
+        .progress-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-completed {
+            background: green;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-not {
+            background: red;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .doubt-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+        }
+
+        input[type="date"], select, textarea {
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 95%;
+            margin-bottom: 10px;
+        }
+
+        .records-section {
+            background: #fefcff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            margin-top: 20px;
+            display: none;
+        }
+        .no-records { font-style: italic; color: #888; margin-top:10px; }
+    </style>
+</head>
+<body>
+    <h1>📘 Homework & Exercism Tracker - {{ current_date }}</h1>
+
+    <form method="POST">
+        <div class="combined-box">
+            <!-- Homework Section -->
+            <div class="homework-section">
+                <h2>📝 Homework Entry</h2>
+
+                <label><b>Date:</b></label>
+                <input type="date" name="date" value="{{ current_date }}" required style="margin-left:10px; display:inline-block; width:auto;" />
+
+                    <label><b>Select Subject:</b></label>
+                <select name="course" required>
+                    <option value="" {% if not selected_course %}selected{% endif %}>Select Subject</option>
+                    {% for course in courses %}
+                    <option value="{{ course }}" {% if selected_course == course %}selected{% endif %}>{{ course }}</option>
+                    {% endfor %}
+                </select>
+
+                <label><b>Description:</b></label>
+                <textarea name="description" rows="3" placeholder="Enter homework details..."></textarea>
+
+                <h3 style="color:blue;">🔑 Teacher Section</h3>
+                <input type="password" id="teacherPass" placeholder="Enter Teacher Password" />
+                <button type="button" onclick="enableMarks()">🔓 Unlock Marks</button>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Marks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td><b>{{ student.name }}</b></td>
+                        <td><input type="text" class="marks-input" name="{{ student.name }}_marks" placeholder="Marks" disabled /></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="doubt-box">
+                    <label><b>❓ Have any doubts?</b></label>
+                    <textarea name="doubt" rows="3" placeholder="Ask your question here..."></textarea>
+                </div>
+            </div>
+
+            <!-- Exercism Section -->
+            <div class="exercism-section">
+                <h2>💡 Exercism Tracker</h2>
+                <table>
+                    <thead>
+                        <tr style="background:#e67e22; color:white;">
+                            <th>Student</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td><b>{{ student.name }}</b></td>
+                        <td>
+                            <div class="progress-buttons">
+                                <button type="button" class="btn-completed" onclick="toggleTasks('{{ student.name }}')">✅ Completed</button>
+                                <button type="button" class="btn-not" onclick="showNotCompleted('{{ student.name }}')">❌ Not Completed</button>
+                            </div>
+                            <textarea class="tasks-input" id="tasks_{{ student.name }}" name="{{ student.name }}_progress" rows="2" placeholder="Enter completed tasks..."></textarea>
+                            <div class="not-completed-msg" id="not_completed_{{ student.name }}" style="display:none; color:red; font-weight:bold;">Not Completed</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Single Save Button -->
+        <button type="submit">✅ Save / Submit All</button>
+    {% if success_message %}
+    <div id="successMsg" style="color:green; font-weight:bold; margin-top:10px;">{{ success_message }}</div>
+    <script>
+    setTimeout(function() {
+        var msg = document.getElementById('successMsg');
+        if (msg) {
+            msg.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
+    }, 100);
+    </script>
+    {% endif %}
+    </form>
+
+    <!-- View Records Button -->
+
+    <button id="toggleRecordsBtn">📂 View Records</button>
+    <div id="filterBox" style="display:none; margin-top:20px;">
+        <form method="get" action="/homework" style="display:flex; flex-wrap:wrap; gap:18px; align-items:center;">
+            <label style="display:flex; align-items:center; gap:8px;"><b>Date:</b>
+                <input type="date" name="filter_date" value="{{ request.args.get('filter_date', current_date) }}" style="width:auto;" />
+            </label>
+            <label style="display:flex; align-items:center; gap:8px;"><b>Subject:</b>
+                <select name="filter_course" style="width:auto;">
+                    <option value="">All</option>
+                    {% for course in courses %}
+                    <option value="{{ course }}" {% if request.args.get('filter_course') == course %}selected{% endif %}>{{ course }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px;"><b>Range:</b>
+                <select name="filter_range" style="width:auto;">
+                    <option value="day" {% if request.args.get('filter_range') == 'day' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if request.args.get('filter_range') == 'week' %}selected{% endif %}>1 Week</option>
+                    <option value="month" {% if request.args.get('filter_range') == 'month' %}selected{% endif %}>1 Month</option>
+                    <option value="year" {% if request.args.get('filter_range') == 'year' %}selected{% endif %}>1 Year</option>
+                </select>
+            </label>
+            <button type="submit" style="height:38px;">🔍 Filter</button>
+        </form>
+    </div>
+    <div class="records-section" id="recordsDiv" style="display:none;">
+        <h2>📑 Homework & Exercism Records</h2>
+        {% if homework_records %}
+            {% for date, courses_dict in homework_records.items() %}
+                {% for course, course_data in courses_dict.items() %}
+                <div class="record" data-date="{{ date }}" data-course="{{ course }}">
+                    <h3>📅 Date: {{ date }}</h3>
+                    <h4>📘 Subject: {{ course }}</h4>
+                    {% if course_data.description %}
+                    <p><strong>📝 Description:</strong> {{ course_data.description }}</p>
+                    {% endif %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Marks</th>
+                                <th>Exercism Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.name }}</td>
+                                <td>{{ course_data.marks.get(student.name, "N/A") }}</td>
+                                <td>{{ course_data.progress.get(student.name, "N/A") }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+            <div class="no-records">No homework or Exercism records found.</div>
+        {% endif %}
+        <a href="{{ url_for('front') }}" style="display:block; margin-top:30px; text-align:center; text-decoration:none; font-weight:bold; color:white; background:darkorange; padding:12px 20px; border-radius:6px;">🏠 Back to Front Page</a>
+    </div>
+</body>
+
+<script>
+// Toggle records section and filter box
+document.getElementById('toggleRecordsBtn').onclick = function() {
+    var recordsDiv = document.getElementById('recordsDiv');
+    var filterBox = document.getElementById('filterBox');
+    if (recordsDiv.style.display === 'none') {
+        recordsDiv.style.display = 'block';
+        filterBox.style.display = 'block';
+    } else {
+        recordsDiv.style.display = 'none';
+        filterBox.style.display = 'none';
+    }
+};
+function toggleTasks(studentName) {
+    var textarea = document.getElementById('tasks_' + studentName);
+    var notMsg = document.getElementById('not_completed_' + studentName);
+    textarea.style.display = 'block';
+    textarea.value = 'Task completed!';
+    notMsg.style.display = 'none';
+    textarea.style.background = '#eaffea';
+}
+
+function showNotCompleted(studentName) {
+    var textarea = document.getElementById('tasks_' + studentName);
+    var notMsg = document.getElementById('not_completed_' + studentName);
+    textarea.style.display = 'block';
+    textarea.value = 'Task not completed';
+    notMsg.style.display = 'none';
+    textarea.style.background = '#ffeaea';
+}
+function enableMarks() {
+    var pass = document.getElementById('teacherPass').value;
+    var correct = '1234'; // Change this to your desired password
+    if (pass === correct) {
+        var inputs = document.getElementsByClassName('marks-input');
+        for (var i = 0; i < inputs.length; i++) {
+            inputs[i].disabled = false;
+            inputs[i].style.background = '#eaffea';
+        }
+        alert('Marks unlocked!');
+    } else {
+        alert('Incorrect password!');
+    }
+}
+</script>
+</html>

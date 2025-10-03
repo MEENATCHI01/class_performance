@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📋 Attendance</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        h1 { color: darkblue; }
+
+        /* Navigation buttons stacked vertically */
+        .btn-nav {
+            background: darkorange;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin: 5px 0;
+            display: block;
+            width: 250px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .btn-nav:hover { opacity: 0.8; }
+
+        table {
+            border-collapse: collapse;
+            width: 60%;
+            margin: 20px auto;
+            font-size: 18px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th { background: #f2f2f2; }
+
+        .form-control {
+            padding: 6px 10px;
+            font-size: 16px;
+            margin: 0 5px 15px 5px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-blue { background: blue; color: white; }
+        .btn-green { background: green; color: white; }
+    </style>
+</head>
+<body>
+<center>
+    <!-- Navigation -->
+    <h2>⚙️ Navigation</h2>
+    <a href="{{ url_for('manage_students') }}" class="btn-nav">👨‍🎓 Manage Students & Subjects</a>
+    <a href="{{ url_for('student_report') }}" class="btn-nav">Individual Data</a>
+    <a href="{{ url_for('view_attendance_records') }}" class="btn-nav">📅 View Attendance Records</a>
+    <a href="{{ url_for('front') }}" class="btn-nav">🏠 Front Page</a>
+
+    <h1>📋 Mark / View Attendance</h1>
+
+    <!-- Success Message -->
+    {% if success_message %}
+    <div style="color: green; font-weight: bold; margin: 10px 0;">{{ success_message }}</div>
+    {% endif %}
+
+    <!-- Attendance Filter Form -->
+    <form method="POST">
+     <label for="date">📅 Select Date:</label>
+     <input type="date" id="date" name="date" required class="form-control" 
+         value="{{ current_date }}">
+
+    <label for="course">Select Subject:</label>
+        <select id="course" name="course" required class="form-control">
+            {% for course in courses %}
+            <option value="{{ course }}" {% if selected_course == course %}selected{% endif %}>{{ course }}</option>
+            {% endfor %}
+        </select>
+
+
+        
+
+        <!-- Attendance Table -->
+        <table>
+            <tr>
+                <th>S.No</th>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Informed</th>
+            </tr>
+            {% for student in students %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ student.name }}</td>
+                <td>
+                    <select name="status_{{ student.name }}">
+                        <option value="P" {% if attendance.get(student.name) == 'P' %}selected{% endif %}>✅ Present</option>
+                        <option value="A" {% if attendance.get(student.name) == 'A' %}selected{% endif %}>❌ Absent</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="info_{{ student.name }}">
+                        <option value="informed" {% if attendance.get(student.name+"_info") == 'informed' %}selected{% endif %}>✔ Informed</option>
+                        <option value="not_informed" {% if attendance.get(student.name+"_info") == 'not_informed' %}selected{% endif %}>❌ Not-Informed</option>
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+        <!-- Buttons -->
+        <button type="submit" class="btn-blue">✔ Submit Attendance</button>
+        <button type="button" class="btn-green" onclick="markAllPresent()">✅ Mark All Present</button>
+    </form>
+
+    <!-- Display Attendance Records -->
+    {% if show_records %}
+    <h2>📊 Attendance Records for {{ selected_course }} (Subject) on {{ current_date }}</h2>
+    <table>
+        <tr>
+            <th>S.No</th>
+            <th>Student</th>
+            <th>Status</th>
+            <th>Informed</th>
+        </tr>
+        {% for student in students %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ attendance.get(student.name, {}).get('status', 'Not Marked') }}</td>
+            <td>
+                {% if attendance.get(student.name, {}).get('status') == 'A' %}
+                    {% if attendance.get(student.name, {}).get('info') == 'informed' %}
+                        ✔ Informed
+                    {% elif attendance.get(student.name, {}).get('info') == 'not_informed' %}
+                        ❌ Not-Informed
+                    {% else %}
+                        N/A
+                    {% endif %}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+</center>
+
+<script>
+function markAllPresent() {
+    document.querySelectorAll('select[name^="status_"]').forEach(select => {
+        select.value = "P";
+    });
+    document.querySelectorAll('select[name^="info_"]').forEach(select => {
+        select.value = "informed";
+    });
+}
+</script>
+
+</body>
+</html>

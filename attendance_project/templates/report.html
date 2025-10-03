@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>📊 Student Attendance Report</title>
+	<style>
+		body { font-family: Arial; margin: 30px; }
+		h1 { color: darkblue; text-align: center; }
+		.form-row { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; }
+		label { font-weight: bold; }
+		select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
+		table { border-collapse: collapse; width: 70%; margin: 0 auto; font-size: 16px; }
+		th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+		th { background: #f2f2f2; }
+		.present { color: green; font-weight: bold; }
+		.absent { color: red; font-weight: bold; }
+	</style>
+</head>
+<body>
+	<h1>📊 Student Attendance Report</h1>
+	<form method="GET" class="form-row">
+		<label for="subject">Subject:</label>
+		<select name="subject" id="subject" required>
+			<option value="">Select Subject</option>
+			{% for c in courses %}
+			<option value="{{ c }}" {% if selected_subject == c %}selected{% endif %}>{{ c }}</option>
+			{% endfor %}
+		</select>
+		<label for="student">Student:</label>
+		<select name="student" id="student" required>
+			<option value="">Select Student</option>
+			{% for s in students %}
+			<option value="{{ s.name }}" {% if selected_student == s.name %}selected{% endif %}>{{ s.name }}</option>
+			{% endfor %}
+		</select>
+		<button type="submit">🔍 View Report</button>
+	</form>
+
+	{% if records is defined %}
+		{% if records %}
+		<table>
+			<tr>
+				<th>Date</th>
+				<th>Status</th>
+				<th>Informed</th>
+			</tr>
+			{% for r in records %}
+			<tr>
+				<td>{{ r.date }}</td>
+				<td>
+					{% if r.status == 'P' %}
+						<span class="present">✅ Present</span>
+					{% elif r.status == 'A' %}
+						<span class="absent">❌ Absent</span>
+					{% else %}
+						Not Marked
+					{% endif %}
+				</td>
+				<td>
+					{% if r.status == 'A' %}
+						{% if r.info == 'informed' %}
+							✔ Informed
+						{% elif r.info == 'not_informed' %}
+							❌ Not-Informed
+						{% else %}
+							N/A
+						{% endif %}
+					{% else %}
+						N/A
+					{% endif %}
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+		{% else %}
+			<p style="text-align:center; font-weight:bold;">No attendance records found for this student and subject.</p>
+		{% endif %}
+	{% endif %}
+</body>
+</html>

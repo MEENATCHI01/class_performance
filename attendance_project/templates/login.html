@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 320px;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      margin: 10px 0;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .student { background: #4CAF50; color: white; }
+    .teacher { background: #2196F3; color: white; }
+    .admin { background: #f44336; color: white; }
+    button:hover { opacity: 0.8; }
+    #loginForm { display: none; }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .login-btn {
+      background: #673ab7;
+      color: white;
+      font-weight: bold;
+    }
+    .back-btn {
+      background: orange;
+      color: white;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .back-btn:hover {
+      background: darkorange;
+    }
+    .error-message {
+      color: red;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Step 1: Choose Role -->
+  <div class="box" id="roleBox">
+    <h1 style="margin-bottom: 10px;">Login</h1>
+    <h2>Choose Role</h2>
+    <button class="student" onclick="showLogin('Student')">Student</button>
+    <button class="teacher" onclick="showLogin('Teacher')">Teacher</button>
+    <button class="admin" onclick="showLogin('Admin')">Admin</button>
+  </div>
+  <!-- Step 2: Login Form -->
+  <div class="box" id="loginForm">
+    <h2 id="roleTitle">Login</h2>
+    <form id="realLoginForm" method="POST" action="/login">
+      <input type="hidden" name="role" id="roleInput">
+      <input type="email" name="email" id="email" placeholder="Enter Email" required>
+      <input type="password" name="password" id="password" placeholder="Enter Password" required>
+      <div class="error-message" id="errorMessage">{{ error }}</div>
+      <button class="login-btn" type="submit">Login</button>
+      <button class="back-btn" type="button" onclick="goBack()">Back</button>
+    </form>
+  </div>
+  <script>
+    let chosenRole = "";
+    function showLogin(role) {
+      chosenRole = role;
+      document.getElementById("roleBox").style.display = "none";
+      document.getElementById("loginForm").style.display = "block";
+      document.getElementById("roleTitle").innerText = role + " Login";
+      document.getElementById("roleInput").value = role;
+    }
+    function goBack() {
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("roleBox").style.display = "block";
+      document.getElementById("email").value = "";
+      document.getElementById("password").value = "";
+      document.getElementById("errorMessage").innerText = "";
+    }
+  </script>
+</body>
+</html>

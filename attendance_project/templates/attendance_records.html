@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📅 View Attendance Records</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        h1 { color: darkblue; text-align: center; }
+        .form-control { padding: 6px 10px; font-size: 16px; margin: 5px; }
+        select, input[type="date"] { width: 250px; }
+        button { padding: 8px 15px; background: darkblue; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin: 5px 0; }
+        table { border-collapse: collapse; width: 60%; margin: 20px auto; font-size: 16px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background: #f2f2f2; }
+        .present { color: green; font-weight: bold; }
+        .absent { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>📅 View Attendance Records</h1>
+    
+
+    <!-- Date, Course & Range Selection Form -->
+    <form method="GET" action="{{ url_for('view_attendance_records') }}" style="text-align:center;">
+        <label for="view_date">📅 Date:</label>
+        <input type="date" id="view_date" name="date" class="form-control" value="{{ selected_date or '' }}" required>
+
+        <label for="view_course"> Subject:</label>
+        <select id="view_course" name="course" class="form-control" required>
+            {% for c in courses %}
+                <option value="{{ c }}" {% if selected_course == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="range">📆 Range:</label>
+        <select id="range" name="range" class="form-control" required>
+            <option value="day" {% if range_type == 'day' %}selected{% endif %}>One Day</option>
+            <option value="week" {% if range_type == 'week' %}selected{% endif %}>One Week</option>
+            <option value="month" {% if range_type == 'month' %}selected{% endif %}>One Month</option>
+            <option value="year" {% if range_type == 'year' %}selected{% endif %}>One Year</option>
+        </select>
+
+        <br>
+        <button type="submit">📅 View Attendance</button>
+    </form>
+
+    <!-- Attendance Records Table -->
+    {% if records %}
+        <table>
+            <tr>
+                <th>S.No</th>
+                <th>Student</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Informed</th>
+            </tr>
+            {% set row = 1 %}
+            {% for student, entries in records.items() %}
+                {% for entry in entries %}
+                <tr>
+                    <td>{{ row }}</td>
+                    <td>{{ student }}</td>
+                    <td>{{ entry.date }}</td>
+                    <td>
+                        {% if entry.status == 'P' %}
+                            <span class="present">✅ Present</span>
+                        {% elif entry.status == 'A' %}
+                            <span class="absent">❌ Absent</span>
+                        {% else %}
+                            Not Marked
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.status == 'A' %}
+                            {% if entry.info == 'informed' %}
+                                ✔ Informed
+                            {% elif entry.info == 'not_informed' %}
+                                ❌ Not-Informed
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% set row = row + 1 %}
+                {% endfor %}
+            {% endfor %}
+        </table>
+    {% else %}
+        {% if selected_date and selected_course %}
+            <p style="text-align:center; font-weight:bold;">No records found for subject {{ selected_course }} on {{ selected_date }}.</p>
+        {% endif %}
+    {% endif %}
+</body>
+</html>
