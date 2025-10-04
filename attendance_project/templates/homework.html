@@ -319,4 +319,40 @@ function enableMarks() {
     }
 }
 </script>
+
+<!-- Student Doubts Section -->
+{% if unanswered_doubts %}
+<div style="margin-top: 40px; padding: 20px; background: #fff3cd; border-radius: 12px; border: 2px solid #ffc107;">
+    <h2 style="color: #856404; margin-bottom: 20px;">💬 Student Questions & Doubts ({{ unanswered_doubts|length }} pending)</h2>
+    
+    {% for doubt in unanswered_doubts %}
+    <div style="background: white; padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #ffc107;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <div>
+                <strong style="color: #667eea;">👨‍🎓 {{ doubt.student.name }}</strong>
+                <span style="color: #6c757d; font-size: 14px; margin-left: 10px;">
+                    📚 {{ doubt.homework.course }} | 📅 {{ doubt.homework.date }}
+                </span>
+            </div>
+            <span style="color: #6c757d; font-size: 12px;">{{ doubt.created_at }}</span>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin: 10px 0;">
+            <strong>❓ Question:</strong><br>
+            <p style="margin: 8px 0 0 0;">{{ doubt.question }}</p>
+        </div>
+        
+        <form method="POST" style="margin-top: 15px;">
+            <input type="hidden" name="doubt_id" value="{{ doubt.id }}">
+            <textarea name="answer" placeholder="Type your answer here..." required
+                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; min-height: 80px; font-family: inherit;"></textarea>
+            <button type="submit" style="margin-top: 10px; background: linear-gradient(135deg, #11998e, #38ef7d);">
+                ✅ Submit Answer
+            </button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 </html>

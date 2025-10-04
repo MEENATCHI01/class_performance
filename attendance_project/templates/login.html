@@ -3,89 +3,203 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Page</title>
+  <title>AIAT - Login</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: moveBackground 20s linear infinite;
+    }
+    @keyframes moveBackground {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .college-header {
+      text-align: center;
+      margin-bottom: 30px;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .college-header h1 {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .college-header p {
+      font-size: 16px;
+      font-weight: 300;
+      letter-spacing: 2px;
     }
     .box {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0px 15px 35px rgba(0,0,0,0.3);
       text-align: center;
-      width: 320px;
+      width: 400px;
+      animation: slideIn 0.5s ease-out;
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     h2 {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      color: #333;
+      font-size: 24px;
     }
     button {
-      padding: 12px;
+      padding: 15px;
       width: 100%;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      margin: 10px 0;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 600;
+      margin: 12px 0;
       cursor: pointer;
-      transition: 0.3s;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .student { background: #4CAF50; color: white; }
-    .teacher { background: #2196F3; color: white; }
-    .admin { background: #f44336; color: white; }
-    button:hover { opacity: 0.8; }
+    .student { 
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+      color: white; 
+    }
+    .teacher { 
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+      color: white; 
+    }
+    .admin { 
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
+      color: white; 
+    }
+    button:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
     #loginForm { display: none; }
     input {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     .login-btn {
-      background: #673ab7;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       font-weight: bold;
     }
+    .login-btn:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
     .back-btn {
-      background: orange;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       color: white;
       font-weight: bold;
       margin-top: 10px;
     }
     .back-btn:hover {
-      background: darkorange;
+      background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
     }
     .error-message {
-      color: red;
-      margin-bottom: 10px;
+      color: #f44336;
+      background: #ffebee;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    .role-icon {
+      font-size: 24px;
+      margin-right: 8px;
     }
   </style>
 </head>
 <body>
-  <!-- Step 1: Choose Role -->
-  <div class="box" id="roleBox">
-    <h1 style="margin-bottom: 10px;">Login</h1>
-    <h2>Choose Role</h2>
-    <button class="student" onclick="showLogin('Student')">Student</button>
-    <button class="teacher" onclick="showLogin('Teacher')">Teacher</button>
-    <button class="admin" onclick="showLogin('Admin')">Admin</button>
-  </div>
-  <!-- Step 2: Login Form -->
-  <div class="box" id="loginForm">
-    <h2 id="roleTitle">Login</h2>
-    <form id="realLoginForm" method="POST" action="/login">
-      <input type="hidden" name="role" id="roleInput">
-      <input type="email" name="email" id="email" placeholder="Enter Email" required>
-      <input type="password" name="password" id="password" placeholder="Enter Password" required>
-      <div class="error-message" id="errorMessage">{{ error }}</div>
-      <button class="login-btn" type="submit">Login</button>
-      <button class="back-btn" type="button" onclick="goBack()">Back</button>
-    </form>
+  <div class="container">
+    <!-- College Header -->
+    <div class="college-header">
+      <h1>🎓 AUROVILLE INSTITUTE OF APPLIED TECHNOLOGY</h1>
+      <p>CLASS PERFORMANCE TRACKING SYSTEM</p>
+    </div>
+    
+    <!-- Step 1: Choose Role -->
+    <div class="box" id="roleBox">
+      <h2>🔐 Select Your Role</h2>
+      <button class="student" onclick="showLogin('Student')">
+        👨‍🎓 Student Login
+      </button>
+      <button class="teacher" onclick="showLogin('Teacher')">
+        👨‍🏫 Teacher Login
+      </button>
+      <button class="admin" onclick="showLogin('Admin')">
+        👨‍💼 Admin Login
+      </button>
+    </div>
+    
+    
+    <!-- Step 2: Login Form -->
+    <div class="box" id="loginForm">
+      <h2 id="roleTitle">Login</h2>
+      <form id="realLoginForm" method="POST" action="/login">
+        <input type="hidden" name="role" id="roleInput">
+        <input type="email" name="email" id="email" placeholder="📧 Enter Email" required>
+        <input type="password" name="password" id="password" placeholder="🔒 Enter Password" required>
+        {% if error %}
+        <div class="error-message" id="errorMessage">
+          {{ error }}
+        </div>
+        {% endif %}
+        <button class="login-btn" type="submit">🚀 Login</button>
+        <button class="back-btn" type="button" onclick="goBack()">⬅️ Back</button>
+      </form>
+    </div>
   </div>
   <script>
     let chosenRole = "";

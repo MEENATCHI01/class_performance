@@ -1,91 +1,200 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>📋 Attendance</title>
+    <title>📋 Mark Attendance - AIAT</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        h1 { color: darkblue; }
-
-        /* Navigation buttons stacked vertically */
-        .btn-nav {
-            background: darkorange;
-            color: white;
-            padding: 12px 15px;
-            border-radius: 6px;
-            text-decoration: none;
-            margin: 5px 0;
-            display: block;
-            width: 250px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .btn-nav:hover { opacity: 0.8; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 { 
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+        h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
 
+        /* Navigation buttons */
+        .nav-section {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .btn-nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-nav:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Form Section */
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 15px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Table Styling */
         table {
             border-collapse: collapse;
-            width: 60%;
-            margin: 20px auto;
-            font-size: 18px;
+            width: 100%;
+            margin: 20px 0;
+            font-size: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
+            border: 1px solid #ddd;
+            padding: 12px;
             text-align: center;
         }
-        th { background: #f2f2f2; }
-
-        .form-control {
-            padding: 6px 10px;
-            font-size: 16px;
-            margin: 0 5px 15px 5px;
+        th { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
         }
+        tr:nth-child(even) { background: #f8f9fa; }
+        tr:hover { background: #e9ecef; }
 
+        /* Buttons */
         button {
-            margin: 5px;
-            padding: 10px 18px;
+            margin: 8px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .btn-blue { background: blue; color: white; }
-        .btn-green { background: green; color: white; }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        .btn-blue { 
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .btn-green { 
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        /* Success Message */
+        .success-message {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        select {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-<center>
-    <!-- Navigation -->
-    <h2>⚙️ Navigation</h2>
-    <a href="{{ url_for('manage_students') }}" class="btn-nav">👨‍🎓 Manage Students & Subjects</a>
-    <a href="{{ url_for('student_report') }}" class="btn-nav">Individual Data</a>
-    <a href="{{ url_for('view_attendance_records') }}" class="btn-nav">📅 View Attendance Records</a>
-    <a href="{{ url_for('front') }}" class="btn-nav">🏠 Front Page</a>
+    <div class="container">
+        <!-- Navigation -->
+        <div class="nav-section">
+            <h2>⚙️ Navigation</h2>
+            <a href="{{ url_for('front') }}" class="btn-nav">🏠 Front Page</a>
+        </div>
 
-    <h1>📋 Mark / View Attendance</h1>
+        <h1>📋 Mark / View Attendance</h1>
 
-    <!-- Success Message -->
-    {% if success_message %}
-    <div style="color: green; font-weight: bold; margin: 10px 0;">{{ success_message }}</div>
-    {% endif %}
+        <!-- Success Message -->
+        {% if success_message %}
+        <div class="success-message">✅ {{ success_message }}</div>
+        {% endif %}
 
-    <!-- Attendance Filter Form -->
-    <form method="POST">
-     <label for="date">📅 Select Date:</label>
-     <input type="date" id="date" name="date" required class="form-control" 
-         value="{{ current_date }}">
-
-    <label for="course">Select Subject:</label>
-        <select id="course" name="course" required class="form-control">
-            {% for course in courses %}
-            <option value="{{ course }}" {% if selected_course == course %}selected{% endif %}>{{ course }}</option>
-            {% endfor %}
-        </select>
-
-
-        
+        <!-- Attendance Filter Form -->
+        <div class="form-section">
+            <form method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">📅 Select Date:</label>
+                        <input type="date" id="date" name="date" required class="form-control" value="{{ current_date }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="course">📚 Select Subject:</label>
+                        <select id="course" name="course" required class="form-control">
+                            {% for course in courses %}
+                            <option value="{{ course }}" {% if selected_course == course %}selected{% endif %}>{{ course }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
         <!-- Attendance Table -->
+        <h3 style="color: #667eea; margin-top: 20px;">👥 Student Attendance</h3>
         <table>
             <tr>
                 <th>S.No</th>
@@ -113,16 +222,19 @@
             {% endfor %}
         </table>
 
-        <br>
-        <!-- Buttons -->
-        <button type="submit" class="btn-blue">✔ Submit Attendance</button>
-        <button type="button" class="btn-green" onclick="markAllPresent()">✅ Mark All Present</button>
-    </form>
+                <!-- Buttons -->
+                <div style="text-align: center; margin-top: 25px;">
+                    <button type="submit" class="btn-blue">✔ Submit Attendance</button>
+                    <button type="button" class="btn-green" onclick="markAllPresent()">✅ Mark All Present</button>
+                </div>
+            </form>
+        </div>
 
-    <!-- Display Attendance Records -->
-    {% if show_records %}
-    <h2>📊 Attendance Records for {{ selected_course }} (Subject) on {{ current_date }}</h2>
-    <table>
+        <!-- Display Attendance Records -->
+        {% if show_records %}
+        <div style="margin-top: 30px;">
+            <h2 style="text-align: center;">📊 Attendance Records for {{ selected_course }} on {{ current_date }}</h2>
+            <table>
         <tr>
             <th>S.No</th>
             <th>Student</th>
@@ -148,22 +260,22 @@
                 {% endif %}
             </td>
         </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
+            {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+    </div>
 
-</center>
-
-<script>
-function markAllPresent() {
-    document.querySelectorAll('select[name^="status_"]').forEach(select => {
-        select.value = "P";
-    });
-    document.querySelectorAll('select[name^="info_"]').forEach(select => {
-        select.value = "informed";
-    });
-}
-</script>
+    <script>
+    function markAllPresent() {
+        document.querySelectorAll('select[name^="status_"]').forEach(select => {
+            select.value = "P";
+        });
+        document.querySelectorAll('select[name^="info_"]').forEach(select => {
+            select.value = "informed";
+        });
+    }
+    </script>
 
 </body>
 </html>

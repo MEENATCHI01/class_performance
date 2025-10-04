@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from datetime import timedelta
+from functools import wraps
 
 app = Flask(__name__)
 # Configure SQLite database
@@ -9,6 +10,30 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = "attendance_secret_key"  
 db = SQLAlchemy(app)
+
+# Role-based access control decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('user'):
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def role_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not session.get('user'):
+                flash('Please log in to access this page.', 'error')
+                return redirect(url_for('login'))
+            if session.get('role') not in roles:
+                flash(f'Access denied. This page is only for {" or ".join(roles)}.', 'error')
+                return redirect(url_for('front'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 # Models
@@ -41,11 +66,24 @@ class HomeworkProgress(db.Model):
     progress = db.Column(db.String(255), nullable=True)
     student = db.relationship('Student')
 
+# Doubt/Question model
+class HomeworkDoubt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    homework_id = db.Column(db.Integer, db.ForeignKey('homework.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
+    question = db.Column(db.Text, nullable=False)
+    answer = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.String(50), nullable=False)
+    answered_at = db.Column(db.String(50), nullable=True)
+    student = db.relationship('Student')
+    homework = db.relationship('Homework')
+
 # ...existing code...
 
 # Place this route after all model/class definitions and app initialization
 
 @app.route("/report", methods=["GET"])
+@role_required('Teacher', 'Admin')
 def student_report():
     students = Student.query.all()
     selected_subject = request.args.get("subject")
@@ -92,21 +130,24 @@ def dateformat(value, format="%Y-%m-%d"):
 # Redirect to login if not logged in
 @app.route("/", methods=["GET", "POST"])
 @app.route("/registeri", methods=["GET", "POST"])
+@login_required
 def home():
-    if not session.get("user"):
-        return redirect(url_for("login"))
     return redirect(url_for("front"))
 
 
 # Welcome front page, require login
 @app.route("/front")
+@login_required
 def front():
-    if not session.get("user"):
-        return redirect(url_for("login"))
-    return render_template("index.html")
+    students = Student.query.all()
+    user_role = session.get('role')
+    user_email = session.get('user')
+    student_name = session.get('student_name', None)
+    return render_template("index.html", students=students, user_role=user_role, user_email=user_email, student_name=student_name)
 
-# ✅ Attendance marking logic now in this route
+# ✅ Attendance marking logic now in this route (Teacher and Admin only)
 @app.route("/mark", methods=["GET", "POST"])
+@role_required('Teacher', 'Admin')
 def mark_attendance():
     students = Student.query.all()
     success_message = None
@@ -159,26 +200,79 @@ def mark_attendance():
 
 
 @app.route("/student/<name>")
+@login_required
 def student_detail(name):
+    # Students can only view their own records
+    if session.get('role') == 'Student':
+        allowed_student_name = session.get('student_name')
+        if not allowed_student_name or name != allowed_student_name:
+            flash('You can only view your own attendance records.', 'error')
+            return redirect(url_for('front'))
+    
     student = Student.query.filter_by(name=name).first()
     if not student:
         return f"Student {name} not found", 404
-    records = AttendanceRecord.query.filter_by(student_id=student.id).all()
-    records_list = [(r.date, r.status) for r in records]
+    
+    # Get filter parameters
+    selected_course = request.args.get('course', 'all')
+    date_range = request.args.get('range', 'all')
+    selected_date = request.args.get('date')
+    
+    # Base query
+    query = AttendanceRecord.query.filter_by(student_id=student.id)
+    
+    # Filter by course
+    if selected_course != 'all':
+        query = query.filter_by(course=selected_course)
+    
+    # Filter by date range
+    if date_range != 'all' and selected_date:
+        try:
+            base_date = datetime.strptime(selected_date, "%Y-%m-%d")
+            if date_range == 'day':
+                db_date = base_date.strftime("%d-%m-%Y")
+                query = query.filter_by(date=db_date)
+            elif date_range == 'month':
+                start_date = base_date.replace(day=1)
+                if start_date.month == 12:
+                    end_date = start_date.replace(year=start_date.year+1, month=1, day=1) - timedelta(days=1)
+                else:
+                    end_date = start_date.replace(month=start_date.month+1, day=1) - timedelta(days=1)
+                start_db = start_date.strftime("%d-%m-%Y")
+                end_db = end_date.strftime("%d-%m-%Y")
+                query = query.filter(AttendanceRecord.date >= start_db, AttendanceRecord.date <= end_db)
+            elif date_range == 'year':
+                start_date = base_date.replace(month=1, day=1)
+                end_date = base_date.replace(month=12, day=31)
+                start_db = start_date.strftime("%d-%m-%Y")
+                end_db = end_date.strftime("%d-%m-%Y")
+                query = query.filter(AttendanceRecord.date >= start_db, AttendanceRecord.date <= end_db)
+        except Exception:
+            pass
+    
+    records = query.all()
+    records_list = [(r.date, r.status, r.course) for r in records]
     records_list.sort(reverse=True)
+    
     total_days = len(records_list)
-    present_count = sum(1 for _, s in records_list if s == "P")
-    absent_count = sum(1 for _, s in records_list if s == "A")
+    present_count = sum(1 for _, s, _ in records_list if s == "P")
+    absent_count = sum(1 for _, s, _ in records_list if s == "A")
     percentage = round((present_count / total_days) * 100, 2) if total_days > 0 else 0
+    
     return render_template("student_detail.html",
                            name=name,
                            records=records_list,
                            total_days=total_days,
                            present_count=present_count,
                            absent_count=absent_count,
-                           percentage=percentage)
+                           percentage=percentage,
+                           courses=courses,
+                           selected_course=selected_course,
+                           date_range=date_range,
+                           selected_date=selected_date or datetime.now().strftime("%Y-%m-%d"))
 
 @app.route("/attendance/<date>")
+@role_required('Teacher', 'Admin')
 def view_attendance(date):
     students = Student.query.all()
     records = AttendanceRecord.query.filter_by(date=date).all()
@@ -192,6 +286,7 @@ def view_attendance(date):
 
 
 @app.route("/students", methods=["GET", "POST"])
+@role_required('Admin')
 def manage_students():
     success_message = None
     student_message = None
@@ -225,6 +320,7 @@ def manage_students():
 from flask import request  # make sure to import request
 
 @app.route("/attendance-records")
+@role_required('Teacher', 'Admin')
 def view_attendance_records():
     from datetime import timedelta
     selected_date = request.args.get("date")
@@ -280,34 +376,48 @@ def view_attendance_records():
 
 
 @app.route("/homework", methods=["GET", "POST"])
+@role_required('Teacher', 'Admin')
 def homework():
 
     students = Student.query.all()
     success_message = None
     selected_course = None
-    # Handle POST (save homework)
+    # Handle POST (save homework and answer doubts)
     if request.method == "POST":
-        selected_date = request.form.get("date")
-        selected_course = request.form.get("course")
-        description = request.form.get("description", "").strip()
-        homework = Homework.query.filter_by(date=selected_date, course=selected_course).first()
-        if not homework:
-            homework = Homework(date=selected_date, course=selected_course, description=description)
-            db.session.add(homework)
+        # Check if it's a doubt answer
+        if 'doubt_id' in request.form:
+            doubt_id = request.form.get("doubt_id")
+            answer = request.form.get("answer", "").strip()
+            if doubt_id and answer:
+                doubt = HomeworkDoubt.query.get(doubt_id)
+                if doubt:
+                    doubt.answer = answer
+                    doubt.answered_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    db.session.commit()
+                    success_message = "Answer submitted successfully!"
         else:
-            homework.description = description
-        db.session.commit()
-        for student in students:
-            mark = request.form.get(f"{student.name}_marks", "").strip()
-            progress = request.form.get(f"{student.name}_progress", "").strip()
-            hw_progress = HomeworkProgress.query.filter_by(homework_id=homework.id, student_id=student.id).first()
-            if not hw_progress:
-                hw_progress = HomeworkProgress(homework_id=homework.id, student_id=student.id)
-                db.session.add(hw_progress)
-            hw_progress.marks = mark
-            hw_progress.progress = progress
-        db.session.commit()
-        success_message = "Homework and Exercism progress saved!"
+            # Save homework
+            selected_date = request.form.get("date")
+            selected_course = request.form.get("course")
+            description = request.form.get("description", "").strip()
+            homework = Homework.query.filter_by(date=selected_date, course=selected_course).first()
+            if not homework:
+                homework = Homework(date=selected_date, course=selected_course, description=description)
+                db.session.add(homework)
+            else:
+                homework.description = description
+            db.session.commit()
+            for student in students:
+                mark = request.form.get(f"{student.name}_marks", "").strip()
+                progress = request.form.get(f"{student.name}_progress", "").strip()
+                hw_progress = HomeworkProgress.query.filter_by(homework_id=homework.id, student_id=student.id).first()
+                if not hw_progress:
+                    hw_progress = HomeworkProgress(homework_id=homework.id, student_id=student.id)
+                    db.session.add(hw_progress)
+                hw_progress.marks = mark
+                hw_progress.progress = progress
+            db.session.commit()
+            success_message = "Homework and Exercism progress saved!"
 
     # Handle GET (filter records)
     filter_date = request.args.get("filter_date")
@@ -367,6 +477,9 @@ def homework():
             homework_records[hw.date][hw.course]["marks"][student_name] = prog.marks or "N/A"
             homework_records[hw.date][hw.course]["progress"][student_name] = prog.progress or "N/A"
 
+    # Get all unanswered doubts
+    unanswered_doubts = HomeworkDoubt.query.filter_by(answer=None).order_by(HomeworkDoubt.created_at.desc()).all()
+    
     return render_template(
         "homework.html",
         students=students,
@@ -374,18 +487,27 @@ def homework():
         homework_records=homework_records,
         selected_course=selected_course,
         current_date=datetime.now().strftime("%Y-%m-%d"),
-        success_message=success_message
+        success_message=success_message,
+        unanswered_doubts=unanswered_doubts
     )
 
 
 
-# --- LOGIN ROUTE ---
-from flask import session, flash
-from werkzeug.security import check_password_hash
+# --- LOGIN & LOGOUT ROUTES ---
 
 # Dummy user data for demonstration (replace with real DB queries)
+# Format: email -> {'password': 'xxx', 'student_name': 'xxx'}
 USERS = {
-    'Student': {'student@example.com': {'password': 'student123'}},
+    'Student': {
+        'aravind@example.com': {'password': 'student123', 'student_name': 'Aravind'},
+        'aswin@example.com': {'password': 'student123', 'student_name': 'Aswin'},
+        'bhavana@example.com': {'password': 'student123', 'student_name': 'Bhavana'},
+        'gokul@example.com': {'password': 'student123', 'student_name': 'Gokul'},
+        'hariharan@example.com': {'password': 'student123', 'student_name': 'Hariharan'},
+        'meenatchi@example.com': {'password': 'student123', 'student_name': 'Meenatchi'},
+        'sivabharathi@example.com': {'password': 'student123', 'student_name': 'Siva Bharathi'},
+        'visal@example.com': {'password': 'student123', 'student_name': 'Visal Stephenraj'},
+    },
     'Teacher': {'teacher@example.com': {'password': 'teacher123'}},
     'Admin': {'admin@example.com': {'password': 'admin123'}},
 }
@@ -402,13 +524,80 @@ def login():
         if user and user["password"] == password:
             session["user"] = email
             session["role"] = role
+            # Store student name for easy access
+            if role == 'Student' and 'student_name' in user:
+                session["student_name"] = user['student_name']
             # Redirect to main page after login
             return redirect(url_for("front"))
         else:
             error = "Invalid credentials. Please try again."
     return render_template("login.html", error=error)
 
-# --- END LOGIN ROUTE ---
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash('You have been logged out successfully.', 'success')
+    return redirect(url_for('login'))
+
+# --- STUDENT HOMEWORK ROUTES ---
+@app.route("/student-homework", methods=["GET", "POST"])
+@role_required('Student')
+def student_homework():
+    student_name = session.get('student_name')
+    student = Student.query.filter_by(name=student_name).first()
+    
+    if not student:
+        flash('Student profile not found.', 'error')
+        return redirect(url_for('front'))
+    
+    # Handle doubt submission
+    if request.method == "POST":
+        homework_id = request.form.get("homework_id")
+        question = request.form.get("question", "").strip()
+        
+        if homework_id and question:
+            new_doubt = HomeworkDoubt(
+                homework_id=homework_id,
+                student_id=student.id,
+                question=question,
+                created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+            db.session.add(new_doubt)
+            db.session.commit()
+            flash('Your question has been submitted successfully!', 'success')
+        return redirect(url_for('student_homework'))
+    
+    # Get filter parameters
+    filter_course = request.args.get("filter_course")
+    
+    # Query homework
+    query = Homework.query
+    if filter_course:
+        query = query.filter_by(course=filter_course)
+    
+    all_homeworks = query.order_by(Homework.date.desc()).all()
+    
+    # Build homework records with student's progress and doubts
+    homework_data = []
+    for hw in all_homeworks:
+        progress = HomeworkProgress.query.filter_by(homework_id=hw.id, student_id=student.id).first()
+        doubts = HomeworkDoubt.query.filter_by(homework_id=hw.id, student_id=student.id).all()
+        
+        homework_data.append({
+            'homework': hw,
+            'marks': progress.marks if progress else 'Not graded',
+            'progress': progress.progress if progress else 'Not submitted',
+            'doubts': doubts
+        })
+    
+    return render_template("student_homework.html",
+                           homework_data=homework_data,
+                           courses=courses,
+                           filter_course=filter_course,
+                           student_name=student_name)
+
+# --- END LOGIN/LOGOUT ROUTES ---
+
 
 if __name__ == "__main__":
     app.secret_key = 'your_secret_key_here'  # Set a real secret key in production

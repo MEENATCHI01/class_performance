@@ -1,39 +1,165 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>📊 Student Attendance Report</title>
+	<title>📊 Student Reports - AIAT</title>
 	<style>
-		body { font-family: Arial; margin: 30px; }
-		h1 { color: darkblue; text-align: center; }
-		.form-row { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; }
-		label { font-weight: bold; }
-		select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
-		table { border-collapse: collapse; width: 70%; margin: 0 auto; font-size: 16px; }
-		th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-		th { background: #f2f2f2; }
-		.present { color: green; font-weight: bold; }
-		.absent { color: red; font-weight: bold; }
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		body { 
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			padding: 20px;
+		}
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			background: white;
+			padding: 30px;
+			border-radius: 15px;
+			box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+		}
+		h1 { 
+			color: #667eea;
+			text-align: center;
+			margin-bottom: 30px;
+			font-size: 32px;
+		}
+		.filter-section {
+			background: #f8f9fa;
+			padding: 25px;
+			border-radius: 10px;
+			margin-bottom: 30px;
+		}
+		.form-row { 
+			display: flex;
+			gap: 20px;
+			justify-content: center;
+			flex-wrap: wrap;
+			align-items: flex-end;
+		}
+		.form-group {
+			flex: 1;
+			min-width: 250px;
+		}
+		label { 
+			display: block;
+			font-weight: 600;
+			margin-bottom: 8px;
+			color: #333;
+			font-size: 15px;
+		}
+		select { 
+			width: 100%;
+			padding: 12px;
+			border-radius: 8px;
+			border: 2px solid #e0e0e0;
+			font-size: 15px;
+			transition: border-color 0.3s;
+			cursor: pointer;
+		}
+		select:focus {
+			outline: none;
+			border-color: #667eea;
+		}
+		button { 
+			padding: 12px 30px;
+			border-radius: 8px;
+			border: none;
+			font-size: 16px;
+			font-weight: 600;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			cursor: pointer;
+			transition: all 0.3s;
+			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+		}
+		button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+		}
+		table { 
+			border-collapse: collapse;
+			width: 100%;
+			margin: 20px 0;
+			font-size: 15px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+		}
+		th, td { 
+			border: 1px solid #ddd;
+			padding: 12px;
+			text-align: center;
+		}
+		th { 
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			font-weight: 600;
+		}
+		tr:nth-child(even) { background: #f8f9fa; }
+		tr:hover { background: #e9ecef; }
+		.present { color: #28a745; font-weight: bold; }
+		.absent { color: #dc3545; font-weight: bold; }
+		.no-records {
+			text-align: center;
+			padding: 40px;
+			color: #6c757d;
+			font-size: 18px;
+			background: #f8f9fa;
+			border-radius: 10px;
+			margin-top: 20px;
+		}
+		.back-link {
+			display: inline-block;
+			margin-top: 20px;
+			padding: 12px 25px;
+			background: #6c757d;
+			color: white;
+			text-decoration: none;
+			border-radius: 8px;
+			font-weight: 600;
+			transition: all 0.3s;
+		}
+		.back-link:hover {
+			background: #5a6268;
+			transform: translateY(-2px);
+		}
 	</style>
 </head>
 <body>
-	<h1>📊 Student Attendance Report</h1>
-	<form method="GET" class="form-row">
-		<label for="subject">Subject:</label>
-		<select name="subject" id="subject" required>
-			<option value="">Select Subject</option>
-			{% for c in courses %}
-			<option value="{{ c }}" {% if selected_subject == c %}selected{% endif %}>{{ c }}</option>
-			{% endfor %}
-		</select>
-		<label for="student">Student:</label>
-		<select name="student" id="student" required>
-			<option value="">Select Student</option>
-			{% for s in students %}
-			<option value="{{ s.name }}" {% if selected_student == s.name %}selected{% endif %}>{{ s.name }}</option>
-			{% endfor %}
-		</select>
-		<button type="submit">🔍 View Report</button>
-	</form>
+	<div class="container">
+		<h1>📊 Student Attendance Reports</h1>
+		
+		<div class="filter-section">
+			<h3 style="color: #667eea; margin-bottom: 20px; text-align: center;">🔍 Select Student & Subject</h3>
+			<form method="GET">
+				<div class="form-row">
+					<div class="form-group">
+						<label for="subject">📚 Select Subject:</label>
+						<select name="subject" id="subject" required>
+							<option value="">-- Select Subject --</option>
+							{% for c in courses %}
+							<option value="{{ c }}" {% if selected_subject == c %}selected{% endif %}>{{ c }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="student">👨‍🎓 Select Student:</label>
+						<select name="student" id="student" required>
+							<option value="">-- Select Student --</option>
+							{% for s in students %}
+							<option value="{{ s.name }}" {% if selected_student == s.name %}selected{% endif %}>{{ s.name }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="form-group" style="display: flex; align-items: flex-end;">
+						<button type="submit">🔍 View Report</button>
+					</div>
+				</div>
+			</form>
+		</div>
 
 	{% if records is defined %}
 		{% if records %}

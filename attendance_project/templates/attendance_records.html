@@ -1,47 +1,171 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>📅 View Attendance Records</title>
+    <title>📅 View Attendance Records - AIAT</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        h1 { color: darkblue; text-align: center; }
-        .form-control { padding: 6px 10px; font-size: 16px; margin: 5px; }
-        select, input[type="date"] { width: 250px; }
-        button { padding: 8px 15px; background: darkblue; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin: 5px 0; }
-        table { border-collapse: collapse; width: 60%; margin: 20px auto; font-size: 16px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background: #f2f2f2; }
-        .present { color: green; font-weight: bold; }
-        .absent { color: red; font-weight: bold; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 { 
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 15px;
+        }
+        .form-control { 
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button { 
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        table { 
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            font-size: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td { 
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) { background: #f8f9fa; }
+        tr:hover { background: #e9ecef; }
+        .present { color: #28a745; font-weight: bold; }
+        .absent { color: #dc3545; font-weight: bold; }
+        .no-records {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 18px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .back-link:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
-    <h1>📅 View Attendance Records</h1>
-    
+    <div class="container">
+        <h1>📅 View Attendance Records</h1>
+        
+        <!-- Date, Course & Range Selection Form -->
+        <div class="filter-section">
+            <h3 style="color: #667eea; margin-bottom: 20px; text-align: center;">🔍 Filter Records</h3>
+            <form method="GET" action="{{ url_for('view_attendance_records') }}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="view_date">📅 Select Date:</label>
+                        <input type="date" id="view_date" name="date" class="form-control" value="{{ selected_date or '' }}" required>
+                    </div>
 
-    <!-- Date, Course & Range Selection Form -->
-    <form method="GET" action="{{ url_for('view_attendance_records') }}" style="text-align:center;">
-        <label for="view_date">📅 Date:</label>
-        <input type="date" id="view_date" name="date" class="form-control" value="{{ selected_date or '' }}" required>
+                    <div class="form-group">
+                        <label for="view_course">📚 Select Subject:</label>
+                        <select id="view_course" name="course" class="form-control" required>
+                            {% for c in courses %}
+                                <option value="{{ c }}" {% if selected_course == c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-        <label for="view_course"> Subject:</label>
-        <select id="view_course" name="course" class="form-control" required>
-            {% for c in courses %}
-                <option value="{{ c }}" {% if selected_course == c %}selected{% endif %}>{{ c }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="range">📆 Range:</label>
-        <select id="range" name="range" class="form-control" required>
-            <option value="day" {% if range_type == 'day' %}selected{% endif %}>One Day</option>
-            <option value="week" {% if range_type == 'week' %}selected{% endif %}>One Week</option>
-            <option value="month" {% if range_type == 'month' %}selected{% endif %}>One Month</option>
-            <option value="year" {% if range_type == 'year' %}selected{% endif %}>One Year</option>
-        </select>
-
-        <br>
-        <button type="submit">📅 View Attendance</button>
-    </form>
+                    <div class="form-group">
+                        <label for="range">📆 Date Range:</label>
+                        <select id="range" name="range" class="form-control" required>
+                            <option value="day" {% if range_type == 'day' %}selected{% endif %}>One Day</option>
+                            <option value="week" {% if range_type == 'week' %}selected{% endif %}>One Week</option>
+                            <option value="month" {% if range_type == 'month' %}selected{% endif %}>One Month</option>
+                            <option value="year" {% if range_type == 'year' %}selected{% endif %}>One Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <button type="submit">🔍 View Attendance</button>
+                </div>
+            </form>
+        </div>
 
     <!-- Attendance Records Table -->
     {% if records %}
@@ -87,10 +211,17 @@
                 {% endfor %}
             {% endfor %}
         </table>
-    {% else %}
-        {% if selected_date and selected_course %}
-            <p style="text-align:center; font-weight:bold;">No records found for subject {{ selected_course }} on {{ selected_date }}.</p>
+        {% else %}
+            {% if selected_date and selected_course %}
+                <div class="no-records">
+                    <p>📭 No records found for subject <strong>{{ selected_course }}</strong> on <strong>{{ selected_date }}</strong>.</p>
+                </div>
+            {% endif %}
         {% endif %}
-    {% endif %}
+        
+        <div style="text-align: center;">
+            <a href="{{ url_for('front') }}" class="back-link">🏠 Back to Home</a>
+        </div>
+    </div>
 </body>
 </html>
